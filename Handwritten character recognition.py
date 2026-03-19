@@ -1,43 +1,51 @@
 import tensorflow as tf
 from tensorflow.keras import layers, models
+import numpy as np
 import matplotlib.pyplot as plt
 
-# Load MNIST dataset (handwritten digits)
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+# -------------- Create artificial dataset 0-15 ----------------
+num_classes = 16
+num_samples = 1000
 
-# Normalize data
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+# Random "images" 28x28
+x_data = np.random.rand(num_samples, 28, 28).astype('float32')
 
-# Build Model
+# Random labels 0-15
+y_data = np.random.randint(0, num_classes, num_samples)
+
+# Split into train and test
+split = int(0.8 * num_samples)
+x_train, x_test = x_data[:split], x_data[split:]
+y_train, y_test = y_data[:split], y_data[split:]
+
+# ---------------- Build Model ----------------
 model = models.Sequential([
     layers.Flatten(input_shape=(28,28)),
     layers.Dense(128, activation='relu'),
     layers.Dense(64, activation='relu'),
-    layers.Dense(10, activation='softmax')
+    layers.Dense(num_classes, activation='softmax')  # 16 classes
 ])
 
-# Compile Model
 model.compile(
     optimizer='adam',
     loss='sparse_categorical_crossentropy',
     metrics=['accuracy']
 )
 
-# Train Model
-model.fit(x_train, y_train, epochs=5)
+# ---------------- Train Model ----------------
+model.fit(x_train, y_train, epochs=5, verbose=2)
 
-# Evaluate Model
+# ---------------- Evaluate ----------------
 test_loss, test_acc = model.evaluate(x_test, y_test)
-
 print("Test Accuracy:", test_acc)
 
-# Prediction Example
+# ---------------- Predict Example ----------------
 prediction = model.predict(x_test)
-
-print("Predicted Digit:", prediction[0].argmax())
+predicted_class = prediction[0].argmax()
+print("Predicted Class:", predicted_class)
+print("Actual Class:", y_test[0])
 
 # Show image
 plt.imshow(x_test[0], cmap='gray')
-plt.title("Handwritten Digit")
+plt.title(f"Predicted: {predicted_class}, Actual: {y_test[0]}")
 plt.show()
